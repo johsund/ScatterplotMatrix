@@ -1,5 +1,5 @@
 /*globals define*/
-define( ["jquery", "text!./style.css", "./d3.v3.min"], function ( $, cssContent ) {
+define( ["jquery", "text!./css/style.css", "js/qlik", "./vendor/d3.v3.min"], function ( $, cssContent, qlik ) {
 	'use strict';
 	$( "<style>" ).html( cssContent ).appendTo( "head" );
 	return {
@@ -54,7 +54,7 @@ define( ["jquery", "text!./style.css", "./d3.v3.min"], function ( $, cssContent 
 			
 			var data = qMatrix.map(function(d) {
 			return {
-				//"Dim0":d[0].qText,
+				"Dim0":d[0].qText,
 				"Dim1":d[1].qText,
 				"Metric1":d[2].qNum,
 				"Metric2":d[3].qNum,
@@ -74,18 +74,18 @@ define( ["jquery", "text!./style.css", "./d3.v3.min"], function ( $, cssContent 
 			$element.append($('<div />').attr("id", id).width(width).height(height));
 			}
 			
-			viz(data, measureLabels, dimLabel, width, height, id);
+			viz(data, measureLabels, dimLabel, width, height, id, layout, qlik);
 			
 		}
 	};
 } );
 
-var viz = function(data, labels, dim, width, height, id) {
+var viz = function(data, labels, dim, width, height, id, layout, qlik) {
 
-
+var app = qlik.currApp();
 
  var domainByTrait = {},
-     traits = d3.keys(data[0]).filter(function(d) { return d !== "Dim1"; }),
+     traits = d3.keys(data[0]).filter(function(d) { return d !== "Dim1" && d !== "Dim0"; }),
      n = traits.length;
 	 
 	 //console.log(n);
@@ -98,8 +98,8 @@ var viz = function(data, labels, dim, width, height, id) {
  //console.log(domainByTrait);
  
  
- var width =  width,//if(width<height) {return width;} else {return height;},
-    size = width/n,
+ var width =  Math.min(width, height),//if(width<height) {return width;} else {return height;},
+    size = (Math.min(width, height)-40)/n,
     padding = 20;
 
 var x = d3.scale.linear()
@@ -187,7 +187,10 @@ var color = d3.scale.category10();
         .attr("cx", function(d) { return x(d[p.x]); })
         .attr("cy", function(d) { return y(d[p.y]); })
         .attr("r", 4)
-        .style("fill", function(d) { return color(d.Dim1); });
+		.attr("class", "visible")
+        .style("fill", function(d) { return color(d.Dim1); })
+		.append("svg:title")
+			.text(function(d) {return d.Dim0;});
   }
 
   var brushCell;
@@ -200,6 +203,9 @@ var color = d3.scale.category10();
       y.domain(domainByTrait[p.y]);
       brushCell = this;
     }
+
+	
+	
   }
 
   // Highlight the selected circles.
@@ -217,30 +223,85 @@ var color = d3.scale.category10();
 
   // If the brush is empty, select all circles.
   function brushend() {
-	// console.log(brush.extent());
 	
-	console.log(brush);
-	var e = brush.extent();
-	svg.selectAll("circle").filter(function(d) {
-		//console.log(d);
-		return e[0][0] < d.Metric4;
-	})
-	.attr("r",10);
+	var testArray = [];
+	testArray = svg.selectAll("[class=visible]");
 		
-	// $.each(data, function(i,obj) {
-		
-		// //console.log(obj);
-		// if(e[0][0] < obj.Metric4 && obj.Metric4 < e[1][0] && e[0][1] > obj.Metric1 && obj.Metric1 < e[1][1]) {
-			// console.log("Success");
-			// console.log(obj);
-		// }
-	// });
+	var secondArray = [];
+	
+	$.each(testArray[0], function(i, obj) {
+			secondArray.push(testArray[0][i].textContent);
+	});
+	
+	secondArray = jQuery.unique(secondArray);
 
+	//Trigger selection&cancel buttons
+	var selBoxName = "selectBox_" + id;
+	var confSelName = "confirmSelect_" + id;	
+	var canSelName = "cancelSelect_" + id;	
+
+	//console.log(id);
 	
+	if (document.getElementById(selBoxName)) {
+	}
+	else {
+		//console.log("triggered");
+				
+		$("#" + id).append("<div id='"+selBoxName+"' style='display:block;position:absolute;top:20px;right:20px;height:30px;width:90px;z-index:10000;border:1px;'></div>");
+		
+		 $("#" + selBoxName).append(
+		"<button id='"+confSelName+"' style='float:left;display:inline-block;' tid='selection-toolbar.refresh' qva-activate='buttonAction($event, button)' q-title-translation='Tooltip.ConfirmSelections' ng-disabled='buttonIsDisabled(button)' class='sel-toolbar-btn sel-toolbar-confirm' ng-class='[button.buttonClass, button.isIcon ? 'sel-toolbar-icon' : '', button.isActive(this) ? 'menu-active' : '']' title='Confirm selection'>" +
+			"<span class='sel-toolbar-span-icon icon-tick' ng-class='button.iconClass'></span>" +
+		"</button>"
+		);
+		$("#"+confSelName).click(function(){
+			if(layout.qHyperCube.qDimensionInfo[0].qDimensionType=="N") {
+				
+				var lookupArray = [];
+				var linkArray = [];
+				
+				$.each(layout.qHyperCube.qDataPages[0].qMatrix, function(index) {
+					if($.inArray(layout.qHyperCube.qDataPages[0].qMatrix[index][0].qElemNumber, lookupArray) === -1 ){
+						lookupArray.push(layout.qHyperCube.qDataPages[0].qMatrix[index][0].qElemNumber);
+						linkArray.push(layout.qHyperCube.qDataPages[0].qMatrix[index][0].qText);
+					}
+				});
+				
+				var selectionValues = [];
+				$.each(selvalues, function(index, value) {
+					//console.log(value);
+					var a = linkArray.indexOf(value);
+					//console.log(a);
+					if(a >=0) {
+						selectionValues.push(lookupArray[a]);
+					}
+				});
+				//console.log(selectionValues);
+				app.field(layout.qHyperCube.qDimensionInfo[0].qGroupFieldDefs[0]).selectValues(selectionValues, false, false);
+			}
+			else {
+				//console.log(secondArray);
+				app.field(layout.qHyperCube.qDimensionInfo[0].qGroupFieldDefs[0]).selectValues(secondArray, false, false);
+			}
+			//$("#" + id).remove();
+		});
+	}
 	
-	//	}
-	//});
-    
+	if (document.getElementById(canSelName)) {
+	}
+	else {
+		$("#" + selBoxName).append(
+		"<button id='"+canSelName+"' style='float:left;display:inline-block;' tid='selection-toolbar.undo' qva-activate='buttonAction($event, button)' q-title-translation='Tooltip.CancelSelections' ng-disabled='buttonIsDisabled(button)' class='sel-toolbar-btn sel-toolbar-cancel' ng-class='[button.buttonClass, button.isIcon ? 'sel-toolbar-icon' : '', button.isActive(this) ? 'menu-active' : '']' title='Cancel selection'>" +
+			"<span class='sel-toolbar-span-icon icon-cancel' ng-class='button.iconClass'></span>" +
+		"</button>"
+		);
+		$("#" + canSelName).click(function(){
+			//selvalues = [];			
+			qlik.resize();
+
+		});
+	}		
+	
 	
 	if (brush.empty()) svg.selectAll(".hidden").classed("hidden", false);
   }
