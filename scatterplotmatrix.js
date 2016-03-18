@@ -1,5 +1,5 @@
 /*globals define*/
-define( ["jquery", "text!./css/style.css", "js/qlik", "./vendor/d3.v3.min"], function ( $, cssContent, qlik ) {
+define( ["jquery", "text!./css/style.css", "js/qlik", "./vendor/d3.v3.min", "./js/themes"], function ( $, cssContent, qlik ) {
 	'use strict';
 	$( "<style>" ).html( cssContent ).appendTo( "head" );
 	return {
@@ -9,7 +9,7 @@ define( ["jquery", "text!./css/style.css", "js/qlik", "./vendor/d3.v3.min"], fun
 				qMeasures: [],
 				qInitialDataFetch: [{
 					qWidth: 6,
-					qHeight: 1500
+					qHeight: 1600
 				}]
 			}
 		},
@@ -31,7 +31,29 @@ define( ["jquery", "text!./css/style.css", "js/qlik", "./vendor/d3.v3.min"], fun
 					uses: "sorting"
 				},
 				settings: {
-					uses: "settings"
+					uses: "settings",
+					items:{
+					  ThemeDropDown: {
+							type: "string",
+							component: "dropdown",
+							label: "Theme",
+							ref: "theme",
+							options: chart_theme,
+							defaultValue: 1
+						},
+						extras:{
+							type: "items",
+							label: "Extra Settings",
+							items: {
+							scrollaftermax: {
+									type: "integer",
+									label: "Circle size (px)",
+									ref: "circleSize",
+									defaultValue: 4
+								}
+							}
+						}					
+					}
 				}
 			}
 		},
@@ -118,7 +140,8 @@ var yAxis = d3.svg.axis()
     .orient("left")
     .ticks(6);
 
-var color = d3.scale.category10();
+var color = d3.scale.ordinal()
+			.range(layout.theme); //category20();
  
   //var size = width / n;
  
@@ -186,11 +209,13 @@ var color = d3.scale.category10();
       .enter().append("circle")
         .attr("cx", function(d) { return x(d[p.x]); })
         .attr("cy", function(d) { return y(d[p.y]); })
-        .attr("r", 4)
+        .attr("r", layout.circleSize)
 		.attr("class", "visible")
         .style("fill", function(d) { return color(d.Dim1); })
+		.on("mouseover", function(d, i) { console.log(labels); console.log(d[4]);})
 		.append("svg:title")
-			.text(function(d) {return d.Dim0;});
+			.text(function(d) {return d.Dim0;});			
+
   }
 
   var brushCell;
@@ -283,7 +308,6 @@ var color = d3.scale.category10();
 				//console.log(secondArray);
 				app.field(layout.qHyperCube.qDimensionInfo[0].qGroupFieldDefs[0]).selectValues(secondArray, false, false);
 			}
-			//$("#" + id).remove();
 		});
 	}
 	
