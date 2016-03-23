@@ -6,4 +6,9 @@ This visualization is based on Mike Bostock's excellent Scatterplot Matrix Brusi
 It comes with a demo based on a FIFA 14 dataset showing a matrix of scatterplots comparing players across different metrics.
 The extension is fully interactive with selection support based on brushing.
 
-Example:
+# Example
+Visualization:
+![alt tag](https://raw.githubusercontent.com/johsund/ScatterplotMatrix/master/ExampleScreenshot3.png)
+
+Brushing:
+![alt tag](https://raw.githubusercontent.com/johsund/ScatterplotMatrix/master/ExampleScreenshot2.png)
