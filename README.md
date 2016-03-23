@@ -8,7 +8,7 @@ The extension is fully interactive with selection support based on brushing.
 
 # Example
 Visualization:
-![alt tag](https://raw.githubusercontent.com/johsund/ScatterplotMatrix/master/ExampleScreenshot3.png)
+![alt tag](https://raw.githubusercontent.com/johsund/ScatterplotMatrix/master/demo/ExampleScreenshot3.png)
 
 Brushing:
-![alt tag](https://raw.githubusercontent.com/johsund/ScatterplotMatrix/master/ExampleScreenshot2.png)
+![alt tag](https://raw.githubusercontent.com/johsund/ScatterplotMatrix/master/demo/ExampleScreenshot2.png)
