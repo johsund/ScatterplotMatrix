@@ -8,8 +8,8 @@ define( ["jquery", "text!./css/style.css", "js/qlik", "./vendor/d3.v3.min", "./j
 				qDimensions: [],
 				qMeasures: [],
 				qInitialDataFetch: [{
-					qWidth: 7,
-					qHeight: 1250
+					qWidth: 11,
+					qHeight: 900
 				}]
 			}
 		},
@@ -25,7 +25,7 @@ define( ["jquery", "text!./css/style.css", "js/qlik", "./vendor/d3.v3.min", "./j
 				measures: {
 					uses: "measures",
 					min: 2,
-					max: 5
+					max: 9
 				},
 				sorting: {
 					uses: "sorting"
@@ -82,51 +82,17 @@ define( ["jquery", "text!./css/style.css", "js/qlik", "./vendor/d3.v3.min", "./j
 			}
 			);
 			
-			
 			var measureLength = layout.qHyperCube.qMeasureInfo.length;
 			
 			var dimLabel = layout.qHyperCube.qDimensionInfo[1].qFallbackTitle;
 			
 			var data = qMatrix.map(function(d) {
-			
-			if(measureLength == 2) {
-				return {
-					"Dim0":d[0].qText,
-					"Dim1":d[1].qText,
-					"Metric1":d[2].qNum,
-					"Metric2":d[3].qNum 			
-				}			
-			}
-			else if(measureLength == 3) {
-				return {
-					"Dim0":d[0].qText,
-					"Dim1":d[1].qText,
-					"Metric1":d[2].qNum,
-					"Metric2":d[3].qNum, 
-					"Metric3":d[4].qNum			
-				}			
-			}
-			else if(measureLength == 4) {
-				return {
-					"Dim0":d[0].qText,
-					"Dim1":d[1].qText,
-					"Metric1":d[2].qNum,
-					"Metric2":d[3].qNum, 
-					"Metric3":d[4].qNum,
-					"Metric4":d[5].qNum				
-				}					
-			}
-			else {
-				return {
-					"Dim0":d[0].qText,
-					"Dim1":d[1].qText,
-					"Metric1":d[2].qNum,
-					"Metric2":d[3].qNum, 
-					"Metric3":d[4].qNum,
-					"Metric4":d[5].qNum,
-					"Metric5":d[6].qNum
-				}					
-			}			
+				var i;
+				var mydata = {};
+				mydata["Dim0"] = d[0].qText;
+				mydata["Dim1"] = d[1].qText;				
+				for	(i = 2; i < d.length; i++) {mydata["Metric" + (i - 2)] = d[i].qNum;}
+				return mydata;			
 
 			});
 			
