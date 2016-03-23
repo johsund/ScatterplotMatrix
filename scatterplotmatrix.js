@@ -8,8 +8,8 @@ define( ["jquery", "text!./css/style.css", "js/qlik", "./vendor/d3.v3.min", "./j
 				qDimensions: [],
 				qMeasures: [],
 				qInitialDataFetch: [{
-					qWidth: 6,
-					qHeight: 1600
+					qWidth: 7,
+					qHeight: 1250
 				}]
 			}
 		},
@@ -24,8 +24,8 @@ define( ["jquery", "text!./css/style.css", "js/qlik", "./vendor/d3.v3.min", "./j
 				},
 				measures: {
 					uses: "measures",
-					min: 4,
-					max: 4
+					min: 2,
+					max: 5
 				},
 				sorting: {
 					uses: "sorting"
@@ -46,11 +46,23 @@ define( ["jquery", "text!./css/style.css", "js/qlik", "./vendor/d3.v3.min", "./j
 							label: "Extra Settings",
 							items: {
 							scrollaftermax: {
-									type: "integer",
-									label: "Circle size (px)",
-									ref: "circleSize",
-									defaultValue: 4
-								}
+								type: "integer",
+								label: "Circle size (px)",
+								ref: "circleSize",
+								defaultValue: 4
+							},
+							showfulltitles: {
+								type: "boolean",
+								label: "Show minimal titles",
+								ref: "minimaltitles",
+								defaultValue: true
+							},
+							showlegend: {
+								type: "boolean",
+								label: "Show legend",
+								ref: "showlegend",
+								defaultValue: true
+							}							
 							}
 						}					
 					}
@@ -61,8 +73,6 @@ define( ["jquery", "text!./css/style.css", "js/qlik", "./vendor/d3.v3.min", "./j
 			canTakeSnapshot: true
 		},
 		paint: function ( $element, layout ) {
-			//console.log($element);
-			//console.log(layout);
 			
 			var qMatrix = layout.qHyperCube.qDataPages[0].qMatrix;
 			
@@ -72,17 +82,52 @@ define( ["jquery", "text!./css/style.css", "js/qlik", "./vendor/d3.v3.min", "./j
 			}
 			);
 			
+			
+			var measureLength = layout.qHyperCube.qMeasureInfo.length;
+			
 			var dimLabel = layout.qHyperCube.qDimensionInfo[1].qFallbackTitle;
 			
 			var data = qMatrix.map(function(d) {
-			return {
-				"Dim0":d[0].qText,
-				"Dim1":d[1].qText,
-				"Metric1":d[2].qNum,
-				"Metric2":d[3].qNum,
-				"Metric3":d[4].qNum,
-				"Metric4":d[5].qNum				
+			
+			if(measureLength == 2) {
+				return {
+					"Dim0":d[0].qText,
+					"Dim1":d[1].qText,
+					"Metric1":d[2].qNum,
+					"Metric2":d[3].qNum 			
+				}			
 			}
+			else if(measureLength == 3) {
+				return {
+					"Dim0":d[0].qText,
+					"Dim1":d[1].qText,
+					"Metric1":d[2].qNum,
+					"Metric2":d[3].qNum, 
+					"Metric3":d[4].qNum			
+				}			
+			}
+			else if(measureLength == 4) {
+				return {
+					"Dim0":d[0].qText,
+					"Dim1":d[1].qText,
+					"Metric1":d[2].qNum,
+					"Metric2":d[3].qNum, 
+					"Metric3":d[4].qNum,
+					"Metric4":d[5].qNum				
+				}					
+			}
+			else {
+				return {
+					"Dim0":d[0].qText,
+					"Dim1":d[1].qText,
+					"Metric1":d[2].qNum,
+					"Metric2":d[3].qNum, 
+					"Metric3":d[4].qNum,
+					"Metric4":d[5].qNum,
+					"Metric5":d[6].qNum
+				}					
+			}			
+
 			});
 			
 			var width = $element.width();
@@ -183,11 +228,11 @@ var color = d3.scale.ordinal()
       .each(plot);
 
   // Titles for the diagonal.
-  cell.filter(function(d) { return d.i === d.j; }).append("text")
+  cell.filter(function(d) { if(layout.minimaltitles) {return d.i === d.j;} else {return 1 === 1};}).append("text")
       .attr("x", padding)
       .attr("y", padding)
       .attr("dy", ".71em")
-      .text(function(d) { return labels[d.i]; });
+      .text(function(d) { if(layout.minimaltitles) {return labels[d.i];} else {return labels[d.i] + " vs. " + labels[d.j];}});
 
   cell.call(brush);
 
@@ -212,12 +257,53 @@ var color = d3.scale.ordinal()
         .attr("r", layout.circleSize)
 		.attr("class", "visible")
         .style("fill", function(d) { return color(d.Dim1); })
-		.on("mouseover", function(d, i) { console.log(labels); console.log(d[4]);})
+		.on("mouseover", function(d, i) { console.log(labels);})
 		.append("svg:title")
-			.text(function(d) {return d.Dim0;});			
+			.text(function(d) {return d.Dim0;});		
 
   }
+  
+	//Trying to figure out the popups
+	// svg.selectAll("circle")
+		// .on("mouseover", function(d, i) { console.log(labels);})
+		// .append("svg:title")
+			// .text(function(d) {return d.Dim0;});
 
+  //Legend
+if(layout.showlegend) {  
+
+	svg.append("rect")
+		.attr("x", width-135)
+		.attr("y", -3)
+		.attr("width", 103)
+		.attr("height", 20 * color.domain().length + 4)
+		.style("fill", "white")
+		.style("paddingTop", "5px")
+		.style("stroke-width", 2)
+		.style("stroke", "black")
+		.style("stroke-opacity", 0.7);
+
+  var legend = svg.selectAll(".legend")
+      .data(color.domain())
+    .enter().append("g")
+      .attr("class", "legend")
+      .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+  legend.append("rect")
+      .attr("x", width - 52)
+      .attr("width", 18)
+      .attr("height", 18)
+      .style("fill", color);
+
+  legend.append("text")
+      .attr("x", width - 58)
+      .attr("y", 9)
+      .attr("dy", ".35em")
+      .style("text-anchor", "end")
+      .text(function(d) { return d; });
+} 
+  // end Legend
+  
   var brushCell;
 
   // Clear the previously-active brush, if any.
@@ -228,8 +314,6 @@ var color = d3.scale.ordinal()
       y.domain(domainByTrait[p.y]);
       brushCell = this;
     }
-
-	
 	
   }
 
@@ -251,7 +335,7 @@ var color = d3.scale.ordinal()
 	
 	var testArray = [];
 	testArray = svg.selectAll("[class=visible]");
-		
+		//console.log(testArray);
 	var secondArray = [];
 	
 	$.each(testArray[0], function(i, obj) {
