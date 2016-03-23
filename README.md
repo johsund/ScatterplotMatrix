@@ -17,5 +17,5 @@ Brushing:
 1. Go to Git-Hub (https://github.com/johsund/ScatterplotMatrix)
 2. Download ZIP
 3. Extract under Sense Extension folder
-4. Add two dimensions (Dots & Colors) and 2 to 5 expressions to create a Scatter Plot Matrix
+4. Add two dimensions (Dots & Colors) and 2 to 9 expressions to create a Scatter Plot Matrix
 5. Customize look and feel with the properties - themes, legends, titles
